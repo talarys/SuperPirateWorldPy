@@ -1,8 +1,20 @@
 # import settings
 import pygame
 import sys
+import os
 from level import Level
 from settings import WINDOW_SIZE
+from pytmx.util_pygame import load_pygame
+
+levels_path = os.path.join("data", "levels")
+
+
+def get_levels(directory):
+    levels = {}
+    for level in os.listdir(directory):
+        name, _ = os.path.splitext(level)
+        levels[name] = os.path.join(directory, level)
+    return levels
 
 
 class Game:
@@ -10,7 +22,8 @@ class Game:
         pygame.init()
         self.display_surface = pygame.display.set_mode(WINDOW_SIZE)
         pygame.display.set_caption("Super Pirate World")
-        self.current_stage = Level()
+        self.tmx_maps = get_levels(levels_path)
+        self.current_stage = Level(load_pygame(self.tmx_maps["omni"]))
 
     def run(self):
         while True:
