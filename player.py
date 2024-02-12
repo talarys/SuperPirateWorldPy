@@ -9,7 +9,7 @@ class Player(pygame.sprite.Sprite):
         self.image.fill("red")
         self.rect = self.image.get_frect(topleft=(obj.x, obj.y))
         self.direction = vector()
-        self.speed = 0.1
+        self.speed = 0.2
 
     def input(self):
         keys = pygame.key.get_pressed()
@@ -20,9 +20,9 @@ class Player(pygame.sprite.Sprite):
             input_vector.x -= 1
         self.direction = input_vector and input_vector.normalize()
 
-    def move(self):
-        self.rect.topleft += self.direction * self.speed
+    def move(self, dt):
+        self.rect.topleft += self.direction * self.speed * dt
 
-    def update(self):
+    def update(self, dt):
         self.input()
-        self.move()
+        self.move(dt)
