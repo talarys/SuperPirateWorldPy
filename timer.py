@@ -10,11 +10,11 @@ class Timer:
         self.repeat = repeat
 
     def activate(self):
-        self.activate = True
+        self.active = True
         self.start_time = get_ticks()
 
     def deactivate(self):
-        self.activate = False
+        self.active = False
         self.start_time = 0
         if self.repeat:
             self.activate()
