@@ -1,5 +1,6 @@
 import pygame
 from pygame.math import Vector2 as vector
+from timer import Timer
 
 
 class Player(pygame.sprite.Sprite):
@@ -22,18 +23,24 @@ class Player(pygame.sprite.Sprite):
         self.collision_sprites = collision_sprites
         self.on_surface = {"floor": False, "left": False, "right": False}
 
+        # Timer
+        self.timers = {"wall_jump": Timer(200)}
+
     # Input handler
     def input(self):
         pressed_keys = pygame.key.get_pressed()
         input_vector = vector()
-        if pressed_keys[pygame.K_RIGHT]:
-            input_vector.x += 1
-        if pressed_keys[pygame.K_LEFT]:
-            input_vector.x -= 1
+
+        if not self.timers["wall_jump"].active:
+            if pressed_keys[pygame.K_RIGHT]:
+                input_vector.x += 1
+            if pressed_keys[pygame.K_LEFT]:
+                input_vector.x -= 1
+            # Normalize X
+            self.direction.x = input_vector.x and input_vector.normalize().x
+
         if pressed_keys[pygame.K_SPACE] or pressed_keys[pygame.K_UP]:
             self.jump = True
-        # Normalize X
-        self.direction.x = input_vector.x and input_vector.normalize().x
 
     # Movement handler
     def move(self, dt):
@@ -61,9 +68,12 @@ class Player(pygame.sprite.Sprite):
 
         # Jump handler
         if self.jump:
+            # Normal jump
             if self.on_surface["floor"]:
                 self.direction.y = -self.jump_height
+            # Wall jump
             elif self.on_surface["left"] or self.on_surface["right"]:
+                self.timers["wall_jump"].activate()
                 self.direction.y = -self.jump_height
                 self.direction.x = 1 if self.on_surface["left"] else -1
             self.jump = False
@@ -117,8 +127,13 @@ class Player(pygame.sprite.Sprite):
                         self.rect.bottom = sprite.rect.top
                     self.direction.y = 0
 
+    def update_timers(self):
+        for timer in self.timers.values():
+            timer.update()
+
     def update(self, dt):
         self.old_rect = self.rect.copy()
+        self.update_timers()
         self.input()
         self.move(dt)
         self.check_contact()
