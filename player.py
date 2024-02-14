@@ -42,10 +42,20 @@ class Player(pygame.sprite.Sprite):
         # X Collision check
         self.handle_collision("x")
 
-        # Gravity
-        self.direction.y += self.gravity / 2 * dt
-        self.rect.y += self.direction.y * dt
-        self.direction.y += self.gravity / 2 * dt
+        if (
+            not self.on_surface["floor"]
+            and self.on_surface["left"]
+            or self.on_surface["right"]
+        ):
+            # Wall hug
+            self.direction.y = 0
+            self.rect.y += self.gravity / 10 * dt
+        else:
+            # Gravity
+            self.direction.y += self.gravity / 2 * dt
+            self.rect.y += self.direction.y * dt
+            self.direction.y += self.gravity / 2 * dt
+
         # Y Collision check
         self.handle_collision("y")
 
@@ -53,37 +63,57 @@ class Player(pygame.sprite.Sprite):
         if self.jump:
             if self.on_surface["floor"]:
                 self.direction.y = -self.jump_height
+            elif self.on_surface["left"] or self.on_surface["right"]:
+                self.direction.y = -self.jump_height
+                self.direction.x = 1 if self.on_surface["left"] else -1
             self.jump = False
 
     def check_contact(self):
         floor_rect = pygame.Rect((self.rect.bottomleft), (self.rect.width, 2))
+        left_rect = pygame.Rect(
+            (self.rect.topleft + vector(-2, self.rect.height / 4)),
+            (2, self.rect.height / 2),
+        )
+        right_rect = pygame.Rect(
+            (self.rect.topright + vector(0, self.rect.height / 4)),
+            (2, self.rect.height / 2),
+        )
+
         collide_rects = [sprite.rect for sprite in self.collision_sprites]
 
-        # Collisions
-        self.on_surface["floor"] = (
-            True if floor_rect.collidelist(collide_rects) >= 0 else False
-        )
+        # Collisions check
+        self.on_surface["floor"] = floor_rect.collidelist(collide_rects) >= 0
+        self.on_surface["left"] = left_rect.collidelist(collide_rects) >= 0
+        self.on_surface["right"] = right_rect.collidelist(collide_rects) >= 0
 
     def handle_collision(self, axis):
         for sprite in self.collision_sprites:
             if sprite.rect.colliderect(self.rect):
                 if axis == "x":
+                    # moving left
                     if (
-                        self.rect.left < sprite.rect.right and self.direction.x < 0
-                    ):  # moving left
+                        self.rect.left <= sprite.rect.right
+                        and self.old_rect.left >= sprite.old_rect.right
+                    ):
                         self.rect.left = sprite.rect.right
+                    # moving right
                     if (
-                        self.rect.right > sprite.rect.left and self.direction.x > 0
-                    ):  # moving right
+                        self.rect.right >= sprite.rect.left
+                        and self.old_rect.right <= sprite.old_rect.left
+                    ):
                         self.rect.right = sprite.rect.left
                 else:
+                    # moving up
                     if (
-                        self.rect.top < sprite.rect.bottom and self.direction.y < 0
-                    ):  # moving up
+                        self.rect.top < sprite.rect.bottom
+                        and self.old_rect.top >= sprite.old_rect.bottom
+                    ):
                         self.rect.top = sprite.rect.bottom
+                    # moving down
                     if (
-                        self.rect.bottom > sprite.rect.top and self.direction.y > 0
-                    ):  # moving down
+                        self.rect.bottom > sprite.rect.top
+                        and self.old_rect.top <= sprite.old_rect.bottom
+                    ):
                         self.rect.bottom = sprite.rect.top
                     self.direction.y = 0
 
