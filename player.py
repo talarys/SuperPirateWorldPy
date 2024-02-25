@@ -16,15 +16,15 @@ class Player(pygame.sprite.Sprite):
         self.direction = vector()
         self.speed = 200
         self.jump = False
-        self.jump_height = 1000
-        self.gravity = 2000
+        self.jump_height = 900
+        self.gravity = 1300
 
         # Collision flags and data
         self.collision_sprites = collision_sprites
         self.on_surface = {"floor": False, "left": False, "right": False}
 
         # Timer
-        self.timers = {"wall_jump": Timer(200)}
+        self.timers = {"wall_jump": Timer(200), "wall_slide_block": Timer(250)}
 
     # Input handler
     def input(self):
